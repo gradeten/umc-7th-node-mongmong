@@ -1,4 +1,4 @@
-import { responseFromUser } from "../dtos/user.dto.js";
+import { responseFromUser, responseFromUserReview, responseFromReviews, responseFromUserMission} from "../dtos/user.dto.js";
 import {
   addReview,
   addUser,
@@ -9,7 +9,11 @@ import {
   addMission,
   getMission,
   addUserMission,
-  getUserMission
+  getUserMission,
+  getUserReview,
+  getAllStoreReviews,
+  getAllStoreMissions,
+  getOngoingUserMissions,
 } from "../repositories/user.repository.js";
 
 export const userSignUp = async (data) => {
@@ -40,7 +44,7 @@ export const userSignUp = async (data) => {
 export const reviewPost = async (data) => {
   const reviewId = await addReview({
     user_id: data.user_id,
-    restaurant_id: data.restaurant_id,
+    store_id: data.store_id,
     rating: data.rating,
     comment: data.comment,
   });
@@ -56,7 +60,7 @@ export const reviewPost = async (data) => {
 
 export const missionPost = async (data) => {
   const missionId = await addMission({
-    restaurant_id: data.restaurant_id,
+    store_id: data.store_id,
     price: data.price,
     point: data.point,
   });
@@ -72,8 +76,8 @@ export const missionPost = async (data) => {
 
 export const usermissionPost = async (data) => {
   const usermissionId = await addUserMission({
-    user_id: data.user_id,
-    mission_id: data.mission_id,
+    userId: data.user_id,
+    missionId: data.mission_id,
     status: data.status,
     created_at: data.created_at,
     due_at: data.due_at,
@@ -86,4 +90,36 @@ export const usermissionPost = async (data) => {
   const mission = await getUserMission(usermissionId);
 
   return mission;
+};
+
+export const listStoreReviews = async (storeId) => {
+  const reviews = await getAllStoreReviews(storeId);
+  return responseFromReviews(reviews);
+};
+
+export const listStoreMissions = async (storeId) => {
+  const missions = await getAllStoreMissions(storeId);
+  return responseFromReviews(missions);
+};
+
+// Function to get a user's reviews by userId
+export const getUserReviews = async (userId) => {
+  const reviews = await getUserReview(userId);
+  
+  if (!reviews) {
+    throw new Error("해당 유저의 리뷰가 없습니다.");
+  }
+
+  return responseFromUserReview(reviews);
+};
+
+// Function to get a user's ongoing missions
+export const getUserMissions = async (userId) => {
+  const missions = await getOngoingUserMissions(userId);
+  
+  if (!missions) {
+    throw new Error("해당되는 유저의 미션이 없습니다.");
+  }
+
+  return responseFromUserMission(missions);
 };
