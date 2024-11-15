@@ -116,6 +116,8 @@ export const addMission = async (data) => {
 };
 
 export const addUserMission = async (data) => {
+  console.log("Checking for existing user mission with", data.user_id, data.mission_id, data.status);
+  
   const userMissionExists = await prisma.userMission.findFirst({
     where: {
       userId: data.user_id,
@@ -124,25 +126,27 @@ export const addUserMission = async (data) => {
     },
   });
 
+
   if (userMissionExists) {
+    console.log("Mission already exists for user:", userMissionExists);
     return null;
   }
 
   const result = await prisma.userMission.create({
     data: {
-      userId: data.user_id,
-      missionId: data.mission_id,
       status: data.status,
       createdAt: data.created_at,
       dueAt: data.due_at,
       mission: {
-        connect: { id: data.missionId }, // 기존 mission과 연결
+        connect: { id: data.mission_id }, // 기존 mission과 연결
       },
       user: {
-        connect: { id: data.userId }, // 기존 user와 연결
+        connect: { id: data.user_id }, // 기존 user와 연결
       },
     },
   });
+
+  console.log("New userMission created with ID:", result.id);
 
   return result.id;
 };
@@ -206,7 +210,7 @@ export const getMission = async (missionId) => {
 
 // 사용자 미션 정보 얻기
 export const getUserMission = async (missionId) => {
-  const userMission = await prisma.mission.findFirst({
+  const userMission = await prisma.userMission.findFirst({
     where: { id: missionId },
   });
 

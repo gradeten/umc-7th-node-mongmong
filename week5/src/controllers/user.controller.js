@@ -8,7 +8,8 @@ export const handleUserSignUp = async (req, res, next) => {
   console.log("body:", req.body); // 값이 잘 들어오나 확인하기 위한 테스트용
 
   const user = await userSignUp(bodyToUser(req.body));
-  res.status(StatusCodes.OK).json({ result: user });
+
+  res.status(StatusCodes.OK).success(user);
 };
 
 export const handleAddReview = async (req, res, next) => {
@@ -16,7 +17,7 @@ export const handleAddReview = async (req, res, next) => {
   console.log("body:", req.body); // 값이 잘 들어오나 확인하기 위한 테스트용
 
   const review = await reviewPost(bodyToReview(req.body));
-  res.status(StatusCodes.OK).json({ result: review });
+  res.status(StatusCodes.OK).success(review);
 };
 
 export const handleAddMission = async (req, res, next) => {
@@ -24,7 +25,7 @@ export const handleAddMission = async (req, res, next) => {
   console.log("body:", req.body); // 값이 잘 들어오나 확인하기 위한 테스트용
 
   const mission = await missionPost(bodyToMission(req.body));
-  res.status(StatusCodes.OK).json({ result: mission });
+  res.status(StatusCodes.OK).success(mission);
 };
 
 export const handleAddUserMission = async (req, res, next) => {
@@ -32,7 +33,8 @@ export const handleAddUserMission = async (req, res, next) => {
   console.log("body:", req.body); // 값이 잘 들어오나 확인하기 위한 테스트용
 
   const usermission = await usermissionPost(bodyToUserMission(req.body));
-  res.status(StatusCodes.OK).json({ result: usermission });
+  console.log("삽입된 usermission:", usermission);
+  res.status(StatusCodes.OK).success(usermission);
 };
 
 

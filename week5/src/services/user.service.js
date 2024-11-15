@@ -15,6 +15,7 @@ import {
   getAllStoreMissions,
   getOngoingUserMissions,
 } from "../repositories/user.repository.js";
+import { DuplicateUserEmailError, NoStoreError, DuplicateMissionError } from "../error.js";
 
 export const userSignUp = async (data) => {
   const joinUserId = await addUser({
@@ -28,7 +29,7 @@ export const userSignUp = async (data) => {
   });
 
   if (joinUserId === null) {
-    throw new Error("이미 존재하는 이메일입니다.");
+    throw new DuplicateUserEmailError("이미 존재하는 이메일입니다.", data);
   }
 
   for (const preference of data.preferences) {
@@ -50,7 +51,7 @@ export const reviewPost = async (data) => {
   });
 
   if (reviewId === null) {
-    throw new Error("존재하지 않는 식당입니다.");
+    throw new NoStoreError("존재하지 않는 식당입니다.", data);
   }
 
   const review = await getReview(reviewId);
@@ -66,7 +67,7 @@ export const missionPost = async (data) => {
   });
 
   if (missionId === null) {
-    throw new Error("존재하지 않는 식당입니다.");
+    throw new NoStoreError("존재하지 않는 식당입니다.", data);
   }
 
   const mission = await getMission(missionId);
@@ -76,20 +77,20 @@ export const missionPost = async (data) => {
 
 export const usermissionPost = async (data) => {
   const usermissionId = await addUserMission({
-    userId: data.user_id,
-    missionId: data.mission_id,
+    user_id: data.user_id,
+    mission_id: data.mission_id,
     status: data.status,
     created_at: data.created_at,
     due_at: data.due_at,
   });
 
   if (usermissionId === null) {
-    throw new Error("이미 진행중인 미션입니다.");
+    throw new DuplicateMissionError("이미 진행중인 미션입니다.", data);
   }
 
-  const mission = await getUserMission(usermissionId);
+  const usermission = await getUserMission(usermissionId);
 
-  return mission;
+  return usermission;
 };
 
 export const listStoreReviews = async (storeId) => {
