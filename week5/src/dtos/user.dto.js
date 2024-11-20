@@ -66,27 +66,30 @@ export const bodyToUser = (body) => {
     };
   };
 
+  export const responseFromMissions = (missions) => {
+    return {
+      data: missions,
+      pagination: {
+        cursor: missions.length ? missions[missions.length - 1].id : null,
+      },
+    };
+  };
+
   export const responseFromUserReview = (reviews) => {
-    return reviews.map((review) => ({
-      id: review.id,
-      storeName: review.store.name,
-      comment: review.comment,
-      rating: review.rating,
-      createdAt: review.createdAt,
-    }));
+    return {
+      data: reviews,
+      pagination: {
+        cursor: reviews.length ? reviews[reviews.length - 1].id : null,
+      },
+    };
 };
 
 export const responseFromUserMission = (missions) => {
-  const created_at = new Date(missions.created_at);
-  const due_at = new Date(missions.due_at);
-
-  return missions.map((mission) => ({
-    id: mission.id,
-    user_id: mission.user_id,
-    mission_id: mission.mission_id,
-    status: mission.status,
-    created_at,
-    due_at,
-  }));
+  return {
+    data: missions,
+    pagination: {
+      cursor: missions.length ? missions[missions.length - 1].id : null,
+    },
+  };
 };
 

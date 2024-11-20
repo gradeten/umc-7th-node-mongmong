@@ -1,4 +1,4 @@
-import { responseFromUser, responseFromUserReview, responseFromReviews, responseFromUserMission} from "../dtos/user.dto.js";
+import { responseFromUser, responseFromUserReview, responseFromReviews, responseFromUserMission, responseFromMissions} from "../dtos/user.dto.js";
 import {
   addReview,
   addUser,
@@ -15,7 +15,7 @@ import {
   getAllStoreMissions,
   getOngoingUserMissions,
 } from "../repositories/user.repository.js";
-import { DuplicateUserEmailError, NoStoreError, DuplicateMissionError } from "../error.js";
+import { DuplicateUserEmailError, NoStoreError, DuplicateMissionError, DataNotExistError } from "../error.js";
 
 export const userSignUp = async (data) => {
   const joinUserId = await addUser({
@@ -93,22 +93,22 @@ export const usermissionPost = async (data) => {
   return usermission;
 };
 
-export const listStoreReviews = async (storeId) => {
-  const reviews = await getAllStoreReviews(storeId);
+export const listStoreReviews = async (storeId, cursor) => {
+  const reviews = await getAllStoreReviews(storeId, cursor);
   return responseFromReviews(reviews);
 };
 
-export const listStoreMissions = async (storeId) => {
-  const missions = await getAllStoreMissions(storeId);
-  return responseFromReviews(missions);
+export const listStoreMissions = async (storeId, cursor) => {
+  const missions = await getAllStoreMissions(storeId, cursor);
+  return responseFromMissions(missions);
 };
 
 // Function to get a user's reviews by userId
-export const getUserReviews = async (userId) => {
-  const reviews = await getUserReview(userId);
+export const getUserReviews = async (userId, cursor) => {
+  const reviews = await getUserReview(userId, cursor);
   
   if (!reviews) {
-    throw new Error("해당 유저의 리뷰가 없습니다.");
+    throw new DataNotExistError("해당 유저의 리뷰가 없습니다.");
   }
 
   return responseFromUserReview(reviews);
@@ -119,7 +119,7 @@ export const getUserMissions = async (userId) => {
   const missions = await getOngoingUserMissions(userId);
   
   if (!missions) {
-    throw new Error("해당되는 유저의 미션이 없습니다.");
+    throw new DataNotExistError("해당되는 유저의 미션이 없습니다.");
   }
 
   return responseFromUserMission(missions);

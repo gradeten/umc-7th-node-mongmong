@@ -165,13 +165,13 @@ export const getReview = async (reviewId) => {
 };
 
 // 리뷰 정보 얻기
-export const getUserReview = async (userId) => {
+export const getUserReview = async (userId, cursor) => {
   const review = await prisma.userStoreReview.findMany({
-    where: { userId: userId },
-    include: {
-      store: true,  // Fetch the related store details
-      user: true,   // Optionally, fetch the related user details
-    },
+    where: { userId: userId, id: { gt: cursor }  },
+    // include: {
+    //   store: true,  
+    //   user: true,  
+    // },
   });
 
   if (!review || review.length === 0) {
@@ -182,9 +182,9 @@ export const getUserReview = async (userId) => {
 };
 
 // 리뷰 정보 얻기
-export const getOngoingUserMissions = async (userId) => {
+export const getOngoingUserMissions = async (userId, cursor) => {
   const mission = await prisma.userMission.findMany({
-    where: { userId: userId, status: 'ONGOING' },
+    where: { userId: userId, status: 'ONGOING', id: { gt: cursor }   },
   });
 
   if (!mission || mission.length === 0) {
