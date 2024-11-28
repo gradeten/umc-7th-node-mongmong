@@ -2,9 +2,11 @@ import { responseFromUser, responseFromUserReview, responseFromReviews, response
 import {
   addReview,
   addUser,
+  upsertUser,
   getUser,
   getUserPreferencesByUserId,
   setPreference,
+  updatePreferences,
   getReview,
   addMission,
   getMission,
@@ -18,7 +20,7 @@ import {
 import { DuplicateUserEmailError, NoStoreError, DuplicateMissionError, DataNotExistError } from "../error.js";
 
 export const userSignUp = async (data) => {
-  const joinUserId = await addUser({
+  const user = await upsertUser({
     email: data.email,
     name: data.name,
     gender: data.gender,
@@ -28,18 +30,15 @@ export const userSignUp = async (data) => {
     phoneNumber: data.phoneNumber,
   });
 
-  if (joinUserId === null) {
-    throw new DuplicateUserEmailError("이미 존재하는 이메일입니다.", data);
-  }
+  const userId = user.id;
 
-  for (const preference of data.preferences) {
-    await setPreference(joinUserId, preference);
-  }
+  // 기존 선호 카테고리 삭제 후 새로운 카테고리 삽입
+  await updatePreferences(userId, data.preferences);
 
-  const user = await getUser(joinUserId);
-  const preferences = await getUserPreferencesByUserId(joinUserId);
+  const updatedUser = await getUser(userId);
+  const preferences = await getUserPreferencesByUserId(userId);
 
-  return responseFromUser({ user, preferences });
+  return responseFromUser({ user: updatedUser, preferences });
 };
 
 export const reviewPost = async (data) => {

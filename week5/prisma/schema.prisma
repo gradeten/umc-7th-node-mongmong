@@ -107,3 +107,12 @@ enum MissionState {
   ONGOING
   DONE
 }
+
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String   @db.VarChar(512)
+  expiresAt DateTime @map("expires_at")
+
+  @@map("session")
+}

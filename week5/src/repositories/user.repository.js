@@ -11,6 +11,31 @@ export const addUser = async (data) => {
   return created.id;
 };
 
+export const upsertUser = async (data) => {
+  const user = await prisma.user.upsert({
+    where: { email: data.email }, // 레코드를 찾기 위한 고유 조건 (unique key)
+    update: { // 레코드가 존재할 경우 업데이트할 필드
+      name: data.name,
+      gender: data.gender,
+      birth: data.birth,
+      address: data.address,
+      detailAddress: data.detailAddress,
+      phoneNumber: data.phoneNumber,
+    },
+    create: { // 레코드가 존재하지 않을 경우 삽입할 필드
+      email: data.email,
+      name: data.name,
+      gender: data.gender,
+      birth: data.birth,
+      address: data.address,
+      detailAddress: data.detailAddress,
+      phoneNumber: data.phoneNumber,
+    },
+  });
+
+  return user;
+};
+
 // 사용자 정보 얻기
 export const getUser = async (userId) => {
   const user = await prisma.user.findFirstOrThrow({ where: { id: userId } });
@@ -25,6 +50,16 @@ export const setPreference = async (userId, foodCategoryId) => {
       foodCategoryId: foodCategoryId,
     },
   });
+};
+
+export const updatePreferences = async (userId, preferences) => {
+  // 기존 선호 카테고리 삭제
+  await prisma.userFavorCategory.deleteMany({ where: { userId } });
+
+  // 새로운 선호 카테고리 삽입
+  for (const foodCategoryId of preferences) {
+    await setPreference(userId, foodCategoryId);
+  }
 };
 
 // 사용자 선호 카테고리 반환
