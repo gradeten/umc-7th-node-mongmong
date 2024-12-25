@@ -31,6 +31,15 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
 
+      - name: Install Node.js
+        run: |
+          ssh playground-umc-7th 'curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -'
+          ssh playground-umc-7th 'sudo apt-get install -y nodejs'
+
+      - name: Check npm version
+        run: |
+          ssh playground-umc-7th 'npm -v'
+
       - name: Copy Workspace
         run: |
           ssh playground-umc-7th 'sudo mkdir -p /opt/app'
@@ -49,7 +58,7 @@ jobs:
             After=network.target
 
             [Service]
-            User=${USER}
+            User=ubuntu
             ExecStart=/usr/bin/npm run dev --prefix /opt/app/
             Restart=always
 
