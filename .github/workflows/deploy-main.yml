@@ -10,9 +10,19 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # Checkout the repository
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Check if prisma changes have been made
+      - name: Check prisma has changes
+        uses: dorny/paths-filter@v3
+        id: paths-filter
+        with:
+          filters: |
+            prisma: ["prisma/**"]
+
+      # Configure SSH for EC2 connection
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
@@ -31,25 +41,41 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
 
+      # Install Node.js on EC2 (if not already installed)
       - name: Install Node.js
         run: |
           ssh playground-umc-7th 'curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -'
           ssh playground-umc-7th 'sudo apt-get install -y nodejs'
 
+      # Check npm version on EC2
       - name: Check npm version
         run: |
           ssh playground-umc-7th 'npm -v'
 
+      # Copy the workspace files to EC2
       - name: Copy Workspace
         run: |
           ssh playground-umc-7th 'sudo mkdir -p /opt/app'
           ssh playground-umc-7th 'sudo chown ubuntu:ubuntu /opt/app'
           scp -r ./[!.]* playground-umc-7th:/opt/app
 
+      # Install npm dependencies on EC2
       - name: Install dependencies
         run: |
-          ssh playground-umc-7th 'npm install --prefix /opt/app/'
+          ssh playground-umc-7th 'cd /opt/app; npm install'
 
+      # Run prisma generate to regenerate the Prisma client
+      - name: Run prisma generate
+        run: |
+          ssh playground-umc-7th 'cd /opt/app; npm exec prisma generate'
+
+      # Apply prisma migrations if changes are detected
+      - name: Apply prisma migrations
+        if: steps.paths-filter.outputs.prisma == 'true'
+        run: |
+          ssh playground-umc-7th 'cd /opt/app; npm exec prisma migrate deploy'
+
+      # Copy systemd service file to EC2
       - name: Copy systemd service file
         run: |
           ssh playground-umc-7th '
@@ -59,18 +85,20 @@ jobs:
 
             [Service]
             User=ubuntu
-            ExecStart=/usr/bin/npm run dev --prefix /opt/app/
+            ExecStart=/usr/bin/npm run start --prefix /opt/app/
             Restart=always
 
             [Install]
             WantedBy=multi-user.target" | sudo tee /etc/systemd/system/app.service
           '
 
+      # Enable and start the systemd service
       - name: Enable systemd service
         run: |
           ssh playground-umc-7th 'sudo systemctl daemon-reload'
           ssh playground-umc-7th 'sudo systemctl enable app'
 
+      # Restart the systemd service
       - name: Restart systemd service
         run: |
           ssh playground-umc-7th 'sudo systemctl restart app'
