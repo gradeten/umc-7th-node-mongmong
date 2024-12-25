@@ -9,7 +9,7 @@ export const naverStrategy = new NaverStrategy(
     {
       clientID: process.env.PASSPORT_NAVER_CLIENT_ID,
       clientSecret: process.env.PASSPORT_NAVER_CLIENT_SECRET,
-      callbackURL: "http://localhost:3000/auth/naver/callback",
+      callbackURL: process.env.NAVER_CALLBACK_URL,
     },
     async (accessToken, refreshToken, profile, cb) => {
       try {
@@ -45,7 +45,7 @@ export const googleStrategy = new GoogleStrategy(
   {
     clientID: process.env.PASSPORT_GOOGLE_CLIENT_ID,
     clientSecret: process.env.PASSPORT_GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://localhost:3000/oauth2/callback/google",
+    callbackURL: process.env.GOOGLE_CALLBACK_URL,
     scope: ["email", "profile"],
     state: true,
   },
