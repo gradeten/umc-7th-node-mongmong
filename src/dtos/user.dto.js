@@ -17,7 +17,7 @@ export const bodyToUser = (body) => {
   
     return {
       user_id: body.user_id,
-      restaurant_id: body.restaurant_id,
+      store_id: body.store_id,
       rating: body.rating,
       comment: body.comment,
     };
@@ -26,7 +26,7 @@ export const bodyToUser = (body) => {
   export const bodyToMission = (body) => {
   
     return {
-      restaurant_id: body.restaurant_id,
+      store_id: body.store_id,
       price: body.price,
       point: body.point,
     };
@@ -46,19 +46,50 @@ export const bodyToUser = (body) => {
   };
 
   export const responseFromUser = ({ user, preferences }) => {
+    const preferFoods = preferences.map(
+      (preference) => preference.foodCategory.name
+    );
+  
     return {
-      id: user.id,
       email: user.email,
       name: user.name,
-      gender: user.gender,
-      birth: user.birth,
-      address: {
-        main: user.address,
-        detail: user.detailAddress,
-      },
-      phoneNumber: user.phoneNumber,
-      preferences: preferences.map((preference) => ({
-        name: preference.name,
-      })),
+      preferCategory: preferFoods,
     };
   };
+
+  export const responseFromReviews = (reviews) => {
+    return {
+      data: reviews,
+      pagination: {
+        cursor: reviews.length ? reviews[reviews.length - 1].id : null,
+      },
+    };
+  };
+
+  export const responseFromMissions = (missions) => {
+    return {
+      data: missions,
+      pagination: {
+        cursor: missions.length ? missions[missions.length - 1].id : null,
+      },
+    };
+  };
+
+  export const responseFromUserReview = (reviews) => {
+    return {
+      data: reviews,
+      pagination: {
+        cursor: reviews.length ? reviews[reviews.length - 1].id : null,
+      },
+    };
+};
+
+export const responseFromUserMission = (missions) => {
+  return {
+    data: missions,
+    pagination: {
+      cursor: missions.length ? missions[missions.length - 1].id : null,
+    },
+  };
+};
+

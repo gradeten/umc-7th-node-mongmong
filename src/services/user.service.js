@@ -1,19 +1,26 @@
-import { responseFromUser } from "../dtos/user.dto.js";
+import { responseFromUser, responseFromUserReview, responseFromReviews, responseFromUserMission, responseFromMissions} from "../dtos/user.dto.js";
 import {
   addReview,
   addUser,
+  upsertUser,
   getUser,
   getUserPreferencesByUserId,
   setPreference,
+  updatePreferences,
   getReview,
   addMission,
   getMission,
   addUserMission,
-  getUserMission
+  getUserMission,
+  getUserReview,
+  getAllStoreReviews,
+  getAllStoreMissions,
+  getOngoingUserMissions,
 } from "../repositories/user.repository.js";
+import { DuplicateUserEmailError, NoStoreError, DuplicateMissionError, DataNotExistError } from "../error.js";
 
 export const userSignUp = async (data) => {
-  const joinUserId = await addUser({
+  const user = await upsertUser({
     email: data.email,
     name: data.name,
     gender: data.gender,
@@ -23,30 +30,27 @@ export const userSignUp = async (data) => {
     phoneNumber: data.phoneNumber,
   });
 
-  if (joinUserId === null) {
-    throw new Error("이미 존재하는 이메일입니다.");
-  }
+  const userId = user.id;
 
-  for (const preference of data.preferences) {
-    await setPreference(joinUserId, preference);
-  }
+  // 기존 선호 카테고리 삭제 후 새로운 카테고리 삽입
+  await updatePreferences(userId, data.preferences);
 
-  const user = await getUser(joinUserId);
-  const preferences = await getUserPreferencesByUserId(joinUserId);
+  const updatedUser = await getUser(userId);
+  const preferences = await getUserPreferencesByUserId(userId);
 
-  return responseFromUser({ user, preferences });
+  return responseFromUser({ user: updatedUser, preferences });
 };
 
 export const reviewPost = async (data) => {
   const reviewId = await addReview({
     user_id: data.user_id,
-    restaurant_id: data.restaurant_id,
+    store_id: data.store_id,
     rating: data.rating,
     comment: data.comment,
   });
 
   if (reviewId === null) {
-    throw new Error("존재하지 않는 식당입니다.");
+    throw new NoStoreError("존재하지 않는 식당입니다.", data);
   }
 
   const review = await getReview(reviewId);
@@ -56,13 +60,13 @@ export const reviewPost = async (data) => {
 
 export const missionPost = async (data) => {
   const missionId = await addMission({
-    restaurant_id: data.restaurant_id,
+    store_id: data.store_id,
     price: data.price,
     point: data.point,
   });
 
   if (missionId === null) {
-    throw new Error("존재하지 않는 식당입니다.");
+    throw new NoStoreError("존재하지 않는 식당입니다.", data);
   }
 
   const mission = await getMission(missionId);
@@ -80,10 +84,42 @@ export const usermissionPost = async (data) => {
   });
 
   if (usermissionId === null) {
-    throw new Error("이미 진행중인 미션입니다.");
+    throw new DuplicateMissionError("이미 진행중인 미션입니다.", data);
   }
 
-  const mission = await getUserMission(usermissionId);
+  const usermission = await getUserMission(usermissionId);
 
-  return mission;
+  return usermission;
+};
+
+export const listStoreReviews = async (storeId, cursor) => {
+  const reviews = await getAllStoreReviews(storeId, cursor);
+  return responseFromReviews(reviews);
+};
+
+export const listStoreMissions = async (storeId, cursor) => {
+  const missions = await getAllStoreMissions(storeId, cursor);
+  return responseFromMissions(missions);
+};
+
+// Function to get a user's reviews by userId
+export const getUserReviews = async (userId, cursor) => {
+  const reviews = await getUserReview(userId, cursor);
+  
+  if (!reviews) {
+    throw new DataNotExistError("해당 유저의 리뷰가 없습니다.");
+  }
+
+  return responseFromUserReview(reviews);
+};
+
+// Function to get a user's ongoing missions
+export const getUserMissions = async (userId) => {
+  const missions = await getOngoingUserMissions(userId);
+  
+  if (!missions) {
+    throw new DataNotExistError("해당되는 유저의 미션이 없습니다.");
+  }
+
+  return responseFromUserMission(missions);
 };
